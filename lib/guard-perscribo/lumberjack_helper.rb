@@ -1,5 +1,4 @@
 require 'colorize'
-require 'rubyisms'
 
 module SeverityHook
   DEFAULT_LABELS = %w(DEBUG INFO WARN ERROR FATAL UNKNOWN)
