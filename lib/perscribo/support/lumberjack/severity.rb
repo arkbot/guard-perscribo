@@ -9,16 +9,13 @@ module Perscribo
         include Core::Dsl::Bootstrappable
 
         def self.included(base)
-          base.inside do
-            bootstrap!(lambda { ::Lumberjack::Severity }.call.singleton_class)
-          end
+          bootstrap!(lambda { ::Lumberjack::Severity }.call.singleton_class)
         end
 
-        # FIXME: This still needs some serious cleanup..
         module Bootstraps
           module PrependMethods
             def self.prepended(base)
-              base.inside do
+              lambda { ::Lumberjack::Severity }.call.inside do
                 reset_severities
                 add_severity(:SUCCESS, '✔', :green)
                 add_severity(:FAILURE, '✖', :red)
@@ -26,7 +23,7 @@ module Perscribo
               end
             end
 
-            DEFAULT_LABELS = %w(DEBUG INFO WARN ERROR FATAL UNKNOWN)
+            DEFAULT_SEVERITIES = %w(DEBUG INFO WARN ERROR FATAL UNKNOWN)
             DEFAULT_COLORS = %w(yellow light_black light_red red red black)
             DEFAULT_CHARS  = %w(D I W E F U)
 
@@ -80,7 +77,7 @@ module Perscribo
               add_item(:SEVERITY_COLORS, color.downcase.to_s)
             end
 
-            # TODO: We do not reset the individual constant for each label..
+            # TODO: We do not reset the individual constant for each severity..
             def setup_items(name, *items)
               base_remove_const(name) if base_const_defined?(name)
               base_const_set(name, items.flatten)
@@ -93,7 +90,7 @@ module Perscribo
             end
 
             def reset_severities
-              setup_items(:SEVERITY_LABELS, DEFAULT_LABELS)
+              setup_items(:SEVERITY_LABELS, DEFAULT_SEVERITIES)
               setup_items(:SEVERITY_COLORS, DEFAULT_COLORS)
               setup_items(:SEVERITY_CHARS, DEFAULT_CHARS)
             end

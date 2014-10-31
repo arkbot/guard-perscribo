@@ -6,18 +6,16 @@ require 'perscribo/support/lumberjack'
 
 module Perscribo
   module Guard
-    include Support::Core::Dsl::Refinements
+    using Support::Core::Dsl::ModuleRefinements
 
     # TODO: Default guard_opts are not injected..
     # => Perscribo::Support::Guard::<PLUGIN>::DEFAULTS[:guard_opts]
 
     def capture!(config_base)
       config = config_base.const_get(:DEFAULTS, false)
-      config[:identifier] = id = config_base.module_eval do
-        lambda { Module.nesting }.call.first.to_s.split(/::/).last
-      end
-      unless $watchers[id].nil?
-        $perscribo.listen(id, config[:labels]) do |id, label, *messages|
+      config[:identifier] = id = config_base.to_s.split(/::/).last
+      if $watchers[id].nil?
+        $perscribo.listen(id, *config[:labels]) do |id, label, *messages|
           [label, messages.join, id]
         end
         $watchers[id] = $perscribo.register(config)
@@ -25,15 +23,23 @@ module Perscribo
     end
 
     def setup!(base)
+      return unless $watchers.nil?
+
       guard = base.instance_eval do
         lambda { ::Guard::UI }.call
       end
 
       guard.options = {
+        # level: :debug,
         level: :info,
         template: '[ :time | :severity | :progname ] :message',
         time_format: '%Y-%m-%d %H:%M:%S'
       }
+
+      [Array, Hash].each { |i| guard.logger.formatter.add(i, :pretty_print) }
+
+      # Workaround for whitespace stripping, because it's annoying.
+      guard.logger.formatter.add(String) { |s| "▸ #{s}" }
 
       $watchers ||= {}
       $perscribo ||= Core::Proxy.new(guard.logger)
