@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'colorize'
   spec.add_dependency 'intus'
 
-  spec.add_dependency 'guard', '~> 2.6.1'
+  spec.add_dependency 'guard', '~> 2.8.1'
   spec.add_dependency 'lumberjack', '~> 1.0.9'
   spec.add_dependency 'perscribo'
 end
